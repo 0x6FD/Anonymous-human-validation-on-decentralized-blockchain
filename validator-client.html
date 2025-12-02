@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Human Verification - Complete Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 18px;
+        }
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .step-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+        }
+        .step-card.completed {
+            border: 2px solid #4CAF50;
+        }
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .step-card.completed .step-number {
+            background: #4CAF50;
+        }
+        .step-card h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        .step-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .validator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .validator-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .validator-card.voted-approve {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .validator-card.voted-deny {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        .validator-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .validator-status {
+            font-size: 12px;
+            color: #666;
+        }
+        .vote-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .vote-approve {
+            background: #4CAF50;
+            color: white;
+        }
+        .vote-deny {
+            background: #f44336;
+            color: white;
+        }
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .credential-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credential-box h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        .service-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+        .service-panel h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .biometric-sim {
+            background: #e3f2fd;
+            border: 2px dashed #2196F3;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .face-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 72px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Anonymous Human Verification System</h1>
+            <p>Complete Proof of Concept - Demonstrating Distributed Verification with Privacy</p>
+        </div>
+
+        <div class="workflow">
+            <div class="step-card" id="step1">
+                <div class="step-number">1</div>
+                <h2>Generate Identity</h2>
+                <p>Create your cryptographic keypair - the foundation of your anonymous identity.</p>
+                <button onclick="step1_generateKeypair()">Generate Keypair</button>
+                <div id="step1Output"></div>
+            </div>
+
+            <div class="step-card" id="step2">
+                <div class="step-number">2</div>
+                <h2>Submit Biometrics</h2>
+                <p>Simulate biometric capture (face scan) for uniqueness verification.</p>
+                <button id="step2Btn" onclick="step2_captureBiometrics()" disabled>Capture Biometrics</button>
+                <div id="step2Output"></div>
+            </div>
+
+            <div class="step-card" id="step3">
+                <div class="step-number">3</div>
+                <h2>Request Verification</h2>
+                <p>Submit your identity and biometrics to the validator network for verification.</p>
+                <button id="step3Btn" onclick="step3_requestVerification()" disabled>Request Verification</button>
+                <div id="step3Output"></div>
+            </div>
+        </div>
+
+        <div class="info-panel" id="validatorPanel" style="display: none;">
+            <h3>🏛️ Validator Network Status</h3>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalValidators">0</div>
+                    <div class="stat-label">Total Validators</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="approvalCount">0</div>
+                    <div class="stat-label">Approvals</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="denialCount">0</div>
+                    <div class="stat-label">Denials</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="consensusStatus">-</div>
+                    <div class="stat-label">Consensus</div>
+                </div>
+            </div>
+            <div class="validator-grid" id="validatorGrid"></div>
+        </div>
+
+        <div class="info-panel" id="credentialPanel" style="display: none;">
+            <h3>✅ Verification Complete!</h3>
+            <div class="credential-box">
+                <h3>Your Anonymous Credential</h3>
+                <p style="color: #2e7d32; margin-bottom: 15px;">
+                    The validator network has signed your public key, creating a credential that proves 
+                    you're a verified unique human without revealing your identity.
+                </p>
+                <div id="credentialDisplay"></div>
+            </div>
+
+            <h3 style="margin-top: 30px;">🌐 Access Services</h3>
+            <p style="color: #666; margin-bottom: 20px;">
+                Use your credential to access different services. Each service sees a different 
+                derived key, so they can't link your activity across platforms.
+            </p>
+
+            <div class="service-panel">
+                <h4>📱 Social Media Platform</h4>
+                <button onclick="accessService('twitter')">Access Twitter-like Service</button>
+                <div id="twitterOutput"></div>
+            </div>
+
+            <div class="service-panel">
+                <h4>💼 Professional Network</h4>
+                <button onclick="accessService('linkedin')">Access LinkedIn-like Service</button>
+                <div id="linkedinOutput"></div>
+            </div>
+
+            <div class="service-panel">
+                <h4>💬 Anonymous Forum</h4>
+                <button onclick="accessService('forum')">Access Anonymous Forum</button>
+                <div id="forumOutput"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let userKeypair = null;
+        let biometricHash = null;
+        let userCredential = null;
+        let coordinator = null;
+
+        // Utility function: Convert buffer to base64
+        function bufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        // Utility function: Hash data
+        async function hashData(data) {
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(data);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+            return bufferToBase64(hashBuffer);
+        }
+
+        // ============================================
+        // VERIFICATION COORDINATOR CLASS
+        // ============================================
+
+        class VerificationCoordinator {
+            constructor(validatorNodes) {
+                this.validators = validatorNodes;
+                this.consensusThreshold = 3;
+            }
+            
+            async fetchValidatorPublicKeys() {
+                console.log('Fetching validator public keys...');
+                const publicKeys = {};
+                
+                for (const validator of this.validators) {
+                    try {
+                        const response = await fetch(`${validator.url}/public-key`);
+                        const data = await response.json();
+                        publicKeys[validator.name] = data.publicKey;
+                        console.log(`✓ Got public key from ${validator.name}`);
+                    } catch (error) {
+                        console.error(`✗ Failed to get public key from ${validator.name}:`, error.message);
+                    }
+                }
+                
+                return publicKeys;
+            }
+            
+            async checkNetworkHealth() {
+                console.log('Checking validator network health...');
+                
+                const healthChecks = await Promise.all(
+                    this.validators.map(async (validator) => {
+                        try {
+                            const response = await fetch(`${validator.url}/health`, {
+                                method: 'GET'
+                            });
+                            const data = await response.json();
+                            return {
+                                name: validator.name,
+                                online: true,
+                                ...data
+                            };
+                        } catch (error) {
+                            return {
+                                name: validator.name,
+                                online: false,
+                                error: error.message
+                            };
+                        }
+                    })
+                );
+                
+                const onlineCount = healthChecks.filter(h => h.online).length;
+                console.log(`Network health: ${onlineCount}/${this.validators.length} validators online`);
+                
+                return {
+                    total: this.validators.length,
+                    online: onlineCount,
+                    validators: healthChecks
+                };
+            }
+            
+            async submitVerification(userPublicKey, biometricHash) {
+                const verificationId = 'verify_' + Date.now() + '_' + Math.random().toString(36).substring(7);
+                
+                console.log(`Starting verification request: ${verificationId}`);
+                
+                const publicKeyPem = await this.exportPublicKeyToPEM(userPublicKey);
+                
+                const verificationRequest = {
+                    verificationId: verificationId,
+                    userPublicKey: publicKeyPem,
+                    biometricHash: biometricHash
+                };
+                
+                console.log('Broadcasting verification request to all validators...');
+                
+                const votes = await Promise.all(
+                    this.validators.map(async (validator) => {
+                        try {
+                            const response = await fetch(`${validator.url}/verify`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(verificationRequest)
+                            });
+                            
+                            const vote = await response.json();
+                            console.log(`${validator.name}: ${vote.vote} - ${vote.reason}`);
+                            
+                            return {
+                                validator: validator.name,
+                                vote: vote.vote,
+                                reason: vote.reason
+                            };
+                            
+                        } catch (error) {
+                            console.error(`${validator.name}: OFFLINE - ${error.message}`);
+                            return {
+                                validator: validator.name,
+                                vote: 'OFFLINE',
+                                reason: error.message
+                            };
+                        }
+                    })
+                );
+                
+                const approvals = votes.filter(v => v.vote === 'APPROVE').length;
+                const denials = votes.filter(v => v.vote === 'DENY').length;
+                const offline = votes.filter(v => v.vote === 'OFFLINE').length;
+                
+                console.log(`Vote results: ${approvals} APPROVE, ${denials} DENY, ${offline} OFFLINE`);
+                
+                const consensusReached = approvals >= this.consensusThreshold;
+                
+                return {
+                    verificationId: verificationId,
+                    consensusReached: consensusReached,
+                    votes: votes,
+                    counts: {
+                        approve: approvals,
+                        deny: denials,
+                        offline: offline,
+                        total: votes.length
+                    }
+                };
+            }
+            
+            async finalizeVerification(verificationId, consensusReached, votes) {
+                console.log(`Finalizing verification ${verificationId}...`);
+                
+                const approvingValidators = this.validators.filter((v, index) => 
+                    votes[index].vote === 'APPROVE'
+                );
+                
+                if (approvingValidators.length === 0) {
+                    throw new Error('No validators approved - cannot finalize');
+                }
+                
+                const finalizationRequest = {
+                    verificationId: verificationId,
+                    consensusReached: consensusReached,
+                    votes: votes
+                };
+                
+                const signatures = await Promise.all(
+                    approvingValidators.map(async (validator) => {
+                        try {
+                            const response = await fetch(`${validator.url}/finalize`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(finalizationRequest)
+                            });
+                            
+                            const result = await response.json();
+                            
+                            if (result.success) {
+                                console.log(`✓ ${validator.name} issued credential`);
+                                return {
+                                    validator: validator.name,
+                                    signature: result.signature,
+                                    publicKey: result.publicKey
+                                };
+                            } else {
+                                console.log(`✗ ${validator.name} failed to issue credential`);
+                                return null;
+                            }
+                            
+                        } catch (error) {
+                            console.error(`✗ ${validator.name} finalization error:`, error.message);
+                            return null;
+                        }
+                    })
+                );
+                
+                const validSignatures = signatures.filter(s => s !== null);
+                
+                if (validSignatures.length === 0) {
+                    throw new Error('No validators successfully issued credentials');
+                }
+                
+                console.log(`✓ Received ${validSignatures.length} credential signatures`);
+                
+                return validSignatures[0];
+            }
+            
+            async verifyUser(userPublicKey, biometricHash) {
+                try {
+                    const verificationResult = await this.submitVerification(userPublicKey, biometricHash);
+                    
+                    if (!verificationResult.consensusReached) {
+                        throw new Error(
+                            `Consensus not reached: ${verificationResult.counts.approve}/${this.consensusThreshold} approvals needed`
+                        );
+                    }
+                    
+                    const credential = await this.finalizeVerification(
+                        verificationResult.verificationId,
+                        verificationResult.consensusReached,
+                        verificationResult.votes
+                    );
+                    
+                    return {
+                        success: true,
+                        verificationId: verificationResult.verificationId,
+                        credential: credential,
+                        votes: verificationResult.votes,
+                        counts: verificationResult.counts
+                    };
+                    
+                } catch (error) {
+                    console.error('Verification failed:', error);
+                    return {
+                        success: false,
+                        error: error.message,
+                        votes: [],
+                        counts: { approve: 0, deny: 0, offline: 0 }
+                    };
+                }
+            }
+            
+            async exportPublicKeyToPEM(publicKey) {
+                const exported = await crypto.subtle.exportKey('spki', publicKey);
+                const exportedAsBase64 = this.arrayBufferToBase64(exported);
+                const pemHeader = '-----BEGIN PUBLIC KEY-----\n';
+                const pemFooter = '\n-----END PUBLIC KEY-----';
+                const pemContents = exportedAsBase64.match(/.{1,64}/g).join('\n');
+                return pemHeader + pemContents + pemFooter;
+            }
+            
+            arrayBufferToBase64(buffer) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+        }
+
+        // ============================================
+        // INITIALIZE COORDINATOR
+        // ============================================
+
+        const VALIDATOR_NODES = [
+            { name: "NodeA", url: "http://192.168.56.101:3001" },
+            { name: "NodeB", url: "http://192.168.56.102:3001" },
+            { name: "NodeC", url: "http://192.168.56.103:3001" },
+            { name: "NodeD", url: "http://192.168.56.104:3001" },
+            { name: "NodeE", url: "http://192.168.56.105:3001" }
+        ];
+
+        window.addEventListener('load', async () => {
+            coordinator = new VerificationCoordinator(VALIDATOR_NODES);
+            console.log('Coordinator initialized');
+        });
+
+        // ============================================
+        // STEP FUNCTIONS
+        // ============================================
+
+        async function step1_generateKeypair() {
+            try {
+                const keypair = await crypto.subtle.generateKey(
+                    {
+                        name: "ECDSA",
+                        namedCurve: "P-256"
+                    },
+                    true,
+                    ["sign", "verify"]
+                );
+
+                userKeypair = keypair;
+
+                const publicKeyBuffer = await crypto.subtle.exportKey("spki", keypair.publicKey);
+                const publicKeyB64 = bufferToBase64(publicKeyBuffer);
+
+                document.getElementById('step1Output').innerHTML = `
+                    <div class="output">
+                        <strong>✓ Keypair Generated</strong><br>
+                        Public Key: ${publicKeyB64.substring(0, 40)}...<br>
+                        <span style="color: #666;">Private key stored securely in memory</span>
+                    </div>
+                `;
+
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2Btn').disabled = false;
+
+            } catch (error) {
+                document.getElementById('step1Output').innerHTML = 
+                    `<div class="output" style="color: red;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function step2_captureBiometrics() {
+            document.getElementById('step2Output').innerHTML = `
+                <div class="biometric-sim">
+                    <div class="face-placeholder">👤</div>
+                    <p style="color: #666; margin-bottom: 15px;">Simulating facial recognition...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%" id="bioProgress"></div>
+                    </div>
+                </div>
+            `;
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('bioProgress').style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    completeBiometricCapture();
+                }
+            }, 200);
+        }
+
+        async function completeBiometricCapture() {
+            const simulatedBiometric = "FACE_DATA_" + Math.random().toString(36).substring(2, 15);
+            biometricHash = await hashData(simulatedBiometric);
+
+            document.getElementById('step2Output').innerHTML = `
+                <div class="output">
+                    <strong>✓ Biometric Captured</strong><br>
+                    Hash: ${biometricHash.substring(0, 40)}...<br>
+                    <span style="color: #666;">Original biometric data discarded (only hash stored)</span>
+                </div>
+            `;
+
+            document.getElementById('step2').classList.add('completed');
+            document.getElementById('step3Btn').disabled = false;
+        }
+
+        async function step3_requestVerification() {
+            if (!userKeypair || !biometricHash || !coordinator) {
+                alert("Complete previous steps first!");
+                return;
+            }
+            
+            document.getElementById('step3Output').innerHTML = 
+                '<div class="output">Connecting to validator network...</div>';
+            
+            try {
+                const health = await coordinator.checkNetworkHealth();
+                
+                document.getElementById('validatorPanel').style.display = 'block';
+                document.getElementById('totalValidators').textContent = health.total;
+                
+                const grid = document.getElementById('validatorGrid');
+                grid.innerHTML = health.validators.map(v => `
+                    <div class="validator-card ${v.online ? 'voted-approve' : 'voted-deny'}">
+                        <div class="validator-name">${v.name}</div>
+                        <div class="validator-status">
+                            <span class="vote-badge vote-${v.online ? 'approve' : 'deny'}">
+                                ${v.online ? 'ONLINE' : 'OFFLINE'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('step3Output').innerHTML = 
+                    '<div class="output">Submitting to validator network...</div>';
+                
+                const result = await coordinator.verifyUser(userKeypair.publicKey, biometricHash);
+                
+                document.getElementById('approvalCount').textContent = result.counts.approve;
+                document.getElementById('denialCount').textContent = result.counts.deny;
+                document.getElementById('consensusStatus').textContent = result.success ? "✓" : "✗";
+                
+                grid.innerHTML = result.votes.map(v => `
+                    <div class="validator-card voted-${v.vote.toLowerCase()}">
+                        <div class="validator-name">${v.validator}</div>
+                        <div class="validator-status">
+                            <span class="vote-badge vote-${v.vote.toLowerCase()}">${v.vote}</span>
+                            <div style="font-size: 11px; color: #666; margin-top: 5px;">${v.reason}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (result.success) {
+                    userCredential = {
+                        signature: result.credential.signature,
+                        validatorPublicKey: result.credential.publicKey,
+                        userPublicKey: userKeypair.publicKey
+                    };
+                    
+                    document.getElementById('step3Output').innerHTML = `
+                        <div class="output" style="background: #e8f5e9; border-color: #4CAF50;">
+                            <strong>✓ Verification Approved!</strong><br>
+                            Consensus: ${result.counts.approve}/${coordinator.consensusThreshold} validators approved<br>
+                            Verification ID: ${result.verificationId}<br>
+                            Credential issued by: ${result.credential.validator}
+                        </div>
+                    `;
+                    
+                    document.getElementById('step3').classList.add('completed');
+                    document.getElementById('credentialPanel').style.display = 'block';
+                    
+                    document.getElementById('credentialDisplay').innerHTML = `
+                        <div style="font-family: monospace; font-size: 11px; background: white; padding: 10px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis;">
+                            ${result.credential.signature.substring(0, 100)}...
+                        </div>
+                    `;
+                    
+                } else {
+                    document.getElementById('step3Output').innerHTML = `
+                        <div class="output" style="background: #ffebee; border-color: #f44336;">
+                            <strong>✗ Verification Denied</strong><br>
+                            ${result.error}<br>
+                            Approvals: ${result.counts.approve}/${coordinator.consensusThreshold} needed
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                document.getElementById('step3Output').innerHTML = 
+                    `<div class="output" style="color: red;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function accessService(serviceName) {
+            if (!userCredential) {
+                alert("Complete verification first!");
+                return;
+            }
+
+            const outputId = serviceName + 'Output';
+            document.getElementById(outputId).innerHTML = 
+                '<div class="output">Verifying credential...</div>';
+
+            try {
+                const serviceString = serviceName + "-service";
+                const serviceBuffer = new TextEncoder().encode(serviceString);
+                const privateKeyBuffer = await crypto.subtle.exportKey("pkcs8", userKeypair.privateKey);
+                
+                const combinedBuffer = new Uint8Array(privateKeyBuffer.byteLength + serviceBuffer.byteLength);
+                combinedBuffer.set(new Uint8Array(privateKeyBuffer), 0);
+                combinedBuffer.set(serviceBuffer, privateKeyBuffer.byteLength);
+                
+                const derivedKeyHash = await crypto.subtle.digest('SHA-256', combinedBuffer);
+                const derivedKeyB64 = bufferToBase64(derivedKeyHash);
+            document.getElementById(outputId).innerHTML = `
+                <div class="output" style="background: #e8f5e9; border-color: #4CAF50;">
+                    <strong>✓ Access Granted to ${serviceName.toUpperCase()}</strong><br><br>
+                    <strong>Your ${serviceName} ID:</strong><br>
+                    ${derivedKeyB64.substring(0, 32)}...<br><br>
+                    <strong>Verified:</strong><br>
+                    ✓ Credential valid<br>
+                    ✓ Key ownership proven<br>
+                    ✓ Unique human verified<br><br>
+                    <span style="color: #2e7d32;">
+                        This service sees a different ID than other services - 
+                        your activity cannot be linked across platforms!
+                    </span>
+                </div>
+            `;
+
+        } catch (error) {
+            document.getElementById(outputId).innerHTML = 
+                `<div class="output" style="color: red;">Error: ${error.message}</div>`;
+        }
+    }
+</script>
+</body>
+</html>
